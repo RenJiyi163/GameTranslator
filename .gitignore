@@ -1,0 +1,18 @@
+# Working data. None of this belongs in the repository: profiles name specific
+# games and carry their install paths, data/ is hundreds of megabytes of
+# translated text, and dist/ is build output.
+profiles/
+data/
+cache/
+logs/
+dist/
+build/
+tmp/
+
+__pycache__/
+*.pyc
+*.docx
+*.building
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
