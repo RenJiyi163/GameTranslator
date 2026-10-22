@@ -1,0 +1,80 @@
+114 INFO: PyInstaller: 6.22.2, contrib hooks: 2026.6
+115 INFO: Python: 3.14.6
+135 INFO: Platform: Windows-11-10.0.26200-SP0
+135 INFO: Python environment: C:\Python314
+136 INFO: wrote D:\GameTranslator\GameTranslator_Setup.spec
+138 INFO: Removing temporary files and cleaning cache in C:\Users\Administrator\AppData\Local\pyinstaller
+139 INFO: Module search paths (PYTHONPATH):
+['D:\\GameTranslator',
+ 'C:\\Python314\\python314.zip',
+ 'C:\\Python314\\DLLs',
+ 'C:\\Python314\\Lib',
+ 'C:\\Python314',
+ 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages',
+ 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\win32',
+ 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\win32\\lib',
+ 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\pythonwin',
+ 'C:\\Python314\\Lib\\site-packages',
+ 'D:\\GameTranslator\\installer']
+pygame-ce 2.5.8 (SDL 2.32.10, Python 3.14.6)
+461 INFO: Appending 'datas' from .spec
+461 INFO: checking Analysis
+461 INFO: Building Analysis because Analysis-00.toc is non existent
+461 INFO: Looking for Python shared library...
+461 INFO: Using Python shared library: C:\Python314\python314.dll
+461 INFO: Running Analysis Analysis-00.toc
+461 INFO: Target bytecode optimization level: 0
+461 INFO: Initializing module dependency graph...
+462 INFO: Initializing module graph hook caches...
+473 INFO: Analyzing modules for base_library.zip ...
+1621 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+2019 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+2197 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+2293 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+2305 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+4222 INFO: Caching module dependency graph...
+4249 INFO: Analyzing D:\GameTranslator\installer\setup_main.py
+4257 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+4258 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+4539 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+4599 INFO: Processing module hooks (post-graph stage)...
+4601 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+4607 INFO: Performing binary vs. data reclassification (928 entries)
+4673 INFO: Looking for ctypes DLLs
+4677 INFO: Analyzing run-time hooks ...
+4677 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\rthooks'
+4680 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\rthooks'
+4694 INFO: Creating base_library.zip...
+4706 INFO: Looking for dynamic libraries
+4809 INFO: Extra DLL search directories (AddDllDirectory): []
+4809 INFO: Extra DLL search directories (PATH): []
+5092 INFO: Warnings written to D:\GameTranslator\build\GameTranslator_Setup\warn-GameTranslator_Setup.txt
+5104 INFO: Graph cross-reference written to D:\GameTranslator\build\GameTranslator_Setup\xref-GameTranslator_Setup.html
+5124 INFO: checking PYZ
+5124 INFO: Building PYZ because PYZ-00.toc is non existent
+5124 INFO: Building PYZ (ZlibArchive) D:\GameTranslator\build\GameTranslator_Setup\PYZ-00.pyz
+5214 INFO: Building PYZ (ZlibArchive) D:\GameTranslator\build\GameTranslator_Setup\PYZ-00.pyz completed successfully.
+5226 INFO: checking PKG
+5226 INFO: Building PKG because PKG-00.toc is non existent
+5226 INFO: Building PKG (CArchive) GameTranslator_Setup.pkg
+6681 INFO: Building PKG (CArchive) GameTranslator_Setup.pkg completed successfully.
+6690 INFO: Bootloader C:\Users\Administrator\AppData\Roaming\Python\Python314\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+6690 INFO: checking EXE
+6690 INFO: Building EXE because EXE-00.toc is non existent
+6690 INFO: Building EXE from EXE-00.toc
+6693 INFO: Copying bootloader EXE to D:\GameTranslator\dist\GameTranslator_Setup.exe
+6702 INFO: Copying icon to EXE
+6706 INFO: Copying 0 resources to EXE
+6706 INFO: Embedding manifest in EXE
+6711 INFO: Appending PKG archive to EXE
+6726 INFO: Fixing EXE headers
+6887 INFO: Building EXE from EXE-00.toc completed successfully.
+6896 INFO: Build complete! The results are available in: D:\GameTranslator\dist
+  skip tm.sqlite in coc2 (not redistributable)
+  skip tm.mtool-backup.sqlite in onsen (not redistributable)
+  skip tm.sqlite in onsen (not redistributable)
++ C:\Python314\python.exe -m PyInstaller --noconfirm --clean --windowed --onefile --name GameTranslator_Setup --icon D:\GameTranslator\gt\assets\gt.ico --add-data D:\GameTranslator\build\payload.zip;. D:\GameTranslator\installer\setup_main.py
+GameTranslator.exe                  14.8 MB
+GameTranslator_Setup.exe            26.9 MB
+game-translator.zip                 14.6 MB
+update.json                          0.0 MB

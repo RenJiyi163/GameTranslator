@@ -49,11 +49,11 @@ def build_app() -> None:
                 "launch.py")
 
 
-# A memory larger than this stays out of the download. A large one is 364 MB
-# of community translations; shipping it would turn a 15 MB package into a
-# 120 MB one. The game still runs without it, every line just goes to the backend, and
-# the list shows a zero memory count so it is not a silent downgrade.
-TM_LIMIT_BYTES = 50 * 1024 * 1024
+# No memory ships in a release. The entries come from community patches and
+# MTool dictionaries, which are not ours to redistribute; the game still runs
+# without them (every line goes to the backend and lands in the cache), and the
+# game stays in the list because the profile itself does ship.
+MEMORY_FILES = {"tm.sqlite", "tm.mtool-backup.sqlite"}
 
 
 def fill_dist() -> None:
@@ -63,13 +63,9 @@ def fill_dist() -> None:
     profiles.mkdir(exist_ok=True)
 
     def ignore(directory: str, names: list[str]) -> set[str]:
-        skipped = set()
-        for name in names:
-            path = Path(directory) / name
-            if name == "tm.sqlite" and path.is_file() and path.stat().st_size > TM_LIMIT_BYTES:
-                print(f"  skip {path.name} in {Path(directory).name} "
-                      f"({path.stat().st_size / 1e6:.0f} MB > limit)")
-                skipped.add(name)
+        skipped = {name for name in names if name in MEMORY_FILES}
+        for name in skipped:
+            print(f"  skip {name} in {Path(directory).name} (not redistributable)")
         return skipped
 
     # Every profile in the working tree ships. Electron games need this: they

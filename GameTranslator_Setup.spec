@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['D:/liteLLM/game-translator/installer/setup_main.py'],
+    ['D:/GameTranslator/installer/setup_main.py'],
     pathex=[],
     binaries=[],
-    datas=[('D:/liteLLM/game-translator/build/payload.zip', '.')],
+    datas=[('D:/GameTranslator/build/payload.zip', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['D:/liteLLM/game-translator/gt/assets/gt.ico'],
+    icon=['D:/GameTranslator/gt/assets/gt.ico'],
 )
