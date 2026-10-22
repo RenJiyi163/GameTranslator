@@ -124,17 +124,32 @@ def build_portable() -> Path:
     return target
 
 
+# Releases live here; both names are stable across versions because GitHub
+# redirects "latest" to whatever the newest release holds.
+RELEASE_BASE = f"https://github.com/RenJiyi163/GameTranslator/releases/latest/download/"
+
+
 def write_manifest(notes: str = "") -> Path:
     exe = DIST / f"{APP}.exe"
     digest = hashlib.sha256(exe.read_bytes()).hexdigest()
+    target = DIST / "update.json"
+    # The file doubles as the app's local config, so keep whatever the user
+    # pointed at (or the default) when regenerating it on a rebuild.
+    previous: dict = {}
+    if target.exists():
+        try:
+            previous = json.loads(target.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            previous = {}
     manifest = {
         "version": version(),
-        "url": f"https://example.invalid/{APP}-{version()}.exe",
+        "url": RELEASE_BASE + f"{APP}.exe",
         "sha256": digest,
         "size": exe.stat().st_size,
         "notes": notes,
+        "manifestUrl": previous.get("manifestUrl") or RELEASE_BASE + "update.json",
+        "autoCheck": previous.get("autoCheck", True),
     }
-    target = DIST / "update.json"
     target.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return target
 

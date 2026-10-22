@@ -16,3 +16,6 @@ __pycache__/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+
+# Written at runtime by the update checker.
+/update.json
