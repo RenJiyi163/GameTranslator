@@ -5,4 +5,4 @@ DOM selector. All game data lives in `profiles/<id>/`; all host-specific code
 lives in `adapters/` and `backends/`.
 """
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"

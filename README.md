@@ -2,7 +2,7 @@
 
 通用游戏运行时汉化框架。核心不含任何游戏名、路径或选择器；每款游戏只是 `profiles/` 下的一份数据。
 
-当前实现：Electron/CDP、RPG Maker MV/MZ、Ren'Py 三条适配线可用。Unity、Unreal、OCR 只留了接口。
+当前实现：Electron/CDP、RPG Maker MV/MZ、Ren'Py、ERA (EraElectron) 四条运行时适配线可用，老 ERA (Emuera) 走离线改写 ERB 与 CSV。Unity、Unreal、OCR 只留了接口。
 
 ## 快速开始
 
@@ -39,6 +39,7 @@ gt.cmd gui --start mygame               :: 开窗口并直接开始翻译这款�
 | RPG Maker MZ | `js/rmmz_core.js`，或 `data/System.json` 加 `nw.dll` | 能 |
 | RPG Maker MV | `www/js/rpg_core.js` 或 `www/data/System.json` | 能 |
 | RPG Maker VX Ace / VX / XP | `*.rgss3a`、`*.rgss2a`、`*.rgssad`、`RGSS*.dll` | 不能，RGSS 是 Ruby |
+| ERA (EraElectron) | `resources/app.asar`，加 `game/csv` 与 `game/ere` 两个数据目录 | 能，页面里的 span 就是正文 |
 | Electron | `resources/app.asar` 或 `resources/app/` | 不能，选择器要按游戏配 |
 | NW.js | `nw.dll`、`node.dll` 或 `package.nw` | 不能，同上 |
 | Ren'Py | `renpy/`、`lib/py3-*`，或 `game/*.rpyc` | 能，走 `RENPY_SEARCHPATH` 外部注入 |
@@ -100,6 +101,53 @@ Ren'Py 不开调试端口，没有 CDP 那样的附加通道。它能用的外�
 **驱动被测游戏不用本机鼠标键盘。** 桥的 `/poll` 回包里带命令，注入脚本在 Ren'Py 自己的事件队列里执行：`start` 走 `jump_out_of_context("start")`（和主菜单的开始按钮同一条路），`event dismiss` 推进一句，`event ctrl_shift_K_t` 触发热键。截图用引擎内的 `renpy.screenshot`，不截桌面，所以窗口在后台也能测。用真实点击行不通：Windows 不批前台切换，点击会落在最上层窗口上，而后台窗口本来也点不到。
 
 实测（Ren'Py 8.6.0 SDK 的 `the_question`，2026-10-22）：主菜单全中文；四句台词依次是中文；按热键切原文后下一句是英文，再按一次回到中文；结束后没有残留进程。游戏目录无改动。
+
+### ERA (EraElectron)
+
+新的 ERA 系游戏（例如 UmaERA 那一支）跑在 [EraElectron](https://gitgud.io/umaera/engine/era-electron) 上：Electron 外壳，界面由 Vue 3 与 Element Plus 写成，GPLv2 开源。游戏自己的数据在 `game/` 下，`csv` 与 `ere` 是文本，`ere.config.json` 是排版与窗口配置。
+
+正文不是 canvas，是页面里的 `<span>`：每一行由 `print-block` 组件排出，滚动容器 `.el-scrollbar__view` 里装着全部对白、选项按钮与状态条。所以这一类不需要单独的适配器，挂 CDP 加一条选择器就能用。判据是 `resources/app.asar` 加 `game/csv` 与 `game/ere` 两个目录。旧包还带 `game/ere.config.json`，新包（3.131 起）不再附，引擎首次运行时自己生成，所以判据不依赖它。
+
+添加游戏时 `detect_engine()` 认出 `era_electron`，profile 里自动写好：
+
+- `selectors`：`.el-scrollbar__view`
+- `skipSelectors`：`.el-input`、`.el-textarea`、`.el-scrollbar__bar`、`.el-loading-mask`、`.el-message`、`.el-notification`
+
+实测两版：
+
+- EraUma v2.21（EraElectron 4.7.1，2026-10-23）：标题页两行文字进未命中表；手工写进词库后重跑，页面上的 span 换成词条，`seen` 与 `applied` 都是 2。
+- EraUma v3.131（EraElectron 5.0.0，同日本地按官方 CI 构建）：版权声明那一屏 39 个文本节点全部采到，38 条进未命中表。
+
+边界：
+
+- 只覆盖 EraElectron。erArk 是 Python 写的另一套（默认 Tk 绘制，开 `web_draw` 才走 Flask 加浏览器），还没适配。老的 Emuera（GDI 画字，脚本是 ERB 加 CSV）不走这条线，见下一节。
+- 模态框能不能翻取决于它内部的容器：版权声明用了 `el-scrollbar__view`，因此被覆盖；设置面板不在这个容器里，不翻。
+- 每追加一行，Vue 会重建滚动区里的节点。运行时把节点被改写当成新文本重新采集，所以句子上屏的瞬间可能先看到原文，词库命中后立刻换成译文。
+
+### ERA (Emuera) 老引擎
+
+老 ERA 游戏跑在 Emuera 上，它是 C# 写的 WinForms 程序，用 GDI 画字，没有 DOM 也没有调试端口。能翻的地方在脚本：玩家看到的每一句都是 ERB 文件里的字面量或者 CSV 的一列。所以这条线走文件，不走窗口。
+
+```bash
+gt.cmd era extract   --game D:\ERA\eraAL-K --out data/eraAL-K.jsonl
+gt.cmd era translate --game D:\ERA\eraAL-K --out data/eraAL-K-tm.jsonl --batch 8
+gt.cmd era apply     --game D:\ERA\eraAL-K --tm data/eraAL-K-tm.jsonl
+```
+
+- `extract` 认 `PRINTFORM[L/W]`、`PRINT[L/W]`、`PRINTBUTTON`、`PRINTDATA` 块，也扫 CSV。ERB 里整行成一段，不按 `%表达式%` 切开：切开之后「の」会单独成为一句，翻出来拼不回去。
+- CSV 只翻显示列，键列不动。定义表取第 2 列；Chara 表只翻 `名前`、`呼び名`，以及 `CSTR` 行里 `名字`、`名前`、`普通ネーム`、`識別名`、`ＳＬＧ解説_0` 到 `_9` 这几项；`GameBase.csv` 只翻 `ウィンドウタイトル`、`タイトル`、`作者`、`追加情報`。`種族`、`所属`、`初期タグ`、`CLOTH:*` 是脚本读回去的数据，留原文。
+- 占位符（`%...%`、`{名字}`、`\n` 这类转义、`[[...]]`）在送模型之前换成 `⟦0⟧` 形式的标记，回来后还原。校验比的是标记的多重集：同一种标记出现几次要对上，先后的顺序变了不算错，除非标记本身是 `RAND`、`RANDOM`、`RESULT`、`GETCHARA`、`GETSPCHARA` 这几个（它们读的是参数位置）。不过的丢弃该条，重试一次单条；仍不对的不入库。私用区字符做标记不行，实测本地模型会把它们吃掉。
+- `translate` 逐条追加写盘，中断重跑会跳过已有译文。后端取 `backends.json` 的 active，可以用 `--backend` 指定。
+- `apply` 只改有译文的片段，其余字节不动，保留原编码、BOM 与换行。原文件是 cp932 而译文是中文时，该文件会被转成 UTF-8 带 BOM，计数写在返回的 `converted` 里。行数逐文件不变。
+- 已经汉化的句子不会被重复翻：有假名的算日文；没有假名的汉字行看文件整体的假名比例；含简体专有字的直接跳过。假名判定不把 `・`（U+30FB）和 `ー`（U+30FC）算进去，否则一个 `・` 就能让整行中文被判成日文，重跑提取会多出上万条假阳性。
+
+实测（eraAL-K，2026-10-23）：5,374 个 ERB 加 CSV 提取出 42,201 条唯一文本。DeepSeek 全量跑完（06:13 到 08:16）译出 41,414 条，占 98.1%，787 条因占位符校验不过被丢弃；`apply` 改写 1,257 个 ERB、52,103 处，改完仍有 1,536 处日文。第二轮补译 980 条并合并词库后，剩余未翻的唯一日文串降到 23 条，这一轮 `apply` 动了 469 个文件、1,873 处，没有文件需要转编码。
+
+边界：
+
+- 模板串对不上：`ファイル %1` 这种，游戏运行时把 `%1` 换成数字，画出来的是「ファイル 1」，词库里查不到。
+- `HTML_PRINT` 不翻，它是排版标签。
+- 改的是游戏文件本身，不是运行时替换。仓库是 git 克隆的话，`git checkout -- .` 就是回滚。
 
 ## 离线批量翻译
 

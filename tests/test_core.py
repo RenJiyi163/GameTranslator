@@ -404,6 +404,28 @@ class TestGameRegistry(unittest.TestCase):
         exe = self.make("resources/app.asar")
         self.assertEqual(games.detect_engine(exe).id, "electron")
 
+    def test_detects_era_electron(self):
+        # 3.131 起不再附 ere.config.json，只有两个数据目录
+        exe = self.make("resources/app.asar", "game/ere/", "game/csv/")
+        engine = games.detect_engine(exe)
+        self.assertEqual(engine.id, "era_electron")
+        self.assertTrue(engine.supported)
+        self.assertEqual(engine.adapter, "electron_cdp")
+
+    def test_detects_era_electron_with_config(self):
+        exe = self.make("resources/app.asar", "game/ere.config.json", "game/csv/")
+        self.assertEqual(games.detect_engine(exe).id, "era_electron")
+
+    def test_era_electron_profile_carries_its_selectors(self):
+        exe = self.make("resources/app.asar", "game/ere/", "game/csv/")
+        game_id, engine = games.add_game(exe, "Era Game", root=self.profiles)
+        profile = Profile.load(game_id, base=self.profiles)
+        self.assertEqual(engine.id, "era_electron")
+        self.assertEqual(profile.adapter, "electron_cdp")
+        self.assertIn(".el-scrollbar__view", [s.css for s in profile.selectors])
+        self.assertIn(".el-input", profile.skip_selectors)
+        self.assertTrue(profile.page_config()["selectors"])
+
     def test_detects_nwjs(self):
         exe = self.make("node.dll")
         self.assertEqual(games.detect_engine(exe).id, "nwjs")

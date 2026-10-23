@@ -48,6 +48,11 @@ RPGMAKER_ACE = Engine(
 ELECTRON = Engine(
     "electron", "Electron", None,
     "Electron 游戏的文字在页面里，但选择器要按游戏一一配置，自动探测不出来")
+# EraElectron（gitgud.io/umaera/engine/era-electron，GPLv2）把 ERA 的文本画成
+# 页面里的 span，版面全部由 Vue 组件负责，所以挂上 CDP 就能读到字。它自带
+# 固定的组件类名，选择器不必按游戏配。
+ERA_ELECTRON = Engine(
+    "era_electron", "ERA (EraElectron)", "electron_cdp")
 NWJS = Engine(
     "nwjs", "NW.js", None,
     "NW.js 打包的网页游戏，同样要先知道文字挂在哪些页面节点上")
@@ -57,7 +62,8 @@ UNREAL = Engine("unreal", "Unreal Engine", None, "需要 UE4SS 脚本，还没�
 UNKNOWN = Engine("unknown", "未知", None, "认不出引擎：程序旁边没有熟悉的文件")
 
 ENGINES = {e.id: e for e in (
-    RPGMAKER_MZ, RPGMAKER_MV, RPGMAKER_ACE, ELECTRON, NWJS, RENPY, UNITY, UNREAL, UNKNOWN)}
+    RPGMAKER_MZ, RPGMAKER_MV, RPGMAKER_ACE, ERA_ELECTRON, ELECTRON, NWJS, RENPY,
+    UNITY, UNREAL, UNKNOWN)}
 
 # Profiles written before the engine id was stored only say which adapter they
 # use; this keeps their label as specific as the adapter allows.
@@ -105,6 +111,14 @@ def detect_engine(exe: str | Path) -> Engine:
     if (any(d.glob("*.rgss3a")) or any(d.glob("*.rgss2a")) or any(d.glob("*.rgssad"))
             or any(d.glob("RGSS3*.dll")) or any(d.glob("RGSS10*.dll"))):
         return RPGMAKER_ACE
+    # EraElectron 的游戏数据固定放在 game/ 下：csv 是表，ere 是剧本与 i18n。
+    # 较新的版本不再附带 ere.config.json（引擎首次运行时自己生成），所以判据
+    # 只认两个数据目录加 Electron 外壳，缺哪个都不算。
+    if ((d / "resources" / "app.asar").exists()
+            and (d / "game" / "csv").is_dir()
+            and ((d / "game" / "ere").is_dir()
+                 or (d / "game" / "ere.config.json").exists())):
+        return ERA_ELECTRON
     if (d / "resources" / "app.asar").exists() or (d / "resources" / "app").is_dir():
         return ELECTRON
     if (d / "nw.dll").exists() or (d / "node.dll").exists() or (d / "package.nw").exists():
@@ -182,6 +196,14 @@ def _profile_dict(game_id: str, name: str, engine: Engine, exe: Path, port: int)
     if engine.adapter == "rpgmaker_mv_mz":
         cfg["adapterConfig"]["restartMessage"] = True
         cfg["adapterConfig"]["skipPatterns"] = list(RPGMAKER_SKIP)
+    if engine.id == ERA_ELECTRON.id:
+        # 印刷区的滚动容器就是全部游戏正文，选项按钮也在里面。输入框、滚动条
+        # 与瞬时的提示框不属于正文。
+        cfg["selectors"] = [{"css": ".el-scrollbar__view", "kind": "text"}]
+        cfg["skipSelectors"] = [
+            ".el-input", ".el-textarea", ".el-scrollbar__bar",
+            ".el-loading-mask", ".el-message", ".el-notification",
+        ]
     return cfg
 
 

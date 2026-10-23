@@ -232,6 +232,63 @@ def cmd_profiles(_args) -> int:
     return 0
 
 
+def cmd_era(args) -> int:
+    """Extract, or apply, translatable text in an Emuera game's scripts."""
+    from . import era
+
+    game_dir = Path(args.game)
+    if not game_dir.is_dir():
+        raise ConfigError(f"不是目录：{game_dir}")
+
+    if args.action == "extract":
+        spans = era.extract(game_dir)
+        unique = era.write_jsonl(spans, Path(args.out))
+        print(json.dumps({"spans": len(spans), "unique": unique, "out": args.out},
+                         ensure_ascii=False))
+        return 0
+
+    if args.action == "translate":
+        from . import settings as settings_mod
+
+        data = settings_mod.load()
+        name = args.backend or (data["active"][0] if data["active"] else "")
+        backend = data["backends"].get(name) or {}
+        base = str(backend.get("base") or "")
+        if not base:
+            raise ConfigError(f"后端 {name!r} 没有地址，先在「模型设置」里填好")
+        spans = era.extract(game_dir)
+        texts = list(dict.fromkeys(span.text for span in spans))
+        if args.limit:
+            texts = texts[: args.limit]
+        stats = era.translate(texts, base, str(backend.get("apiKey") or ""),
+                              str(backend.get("model") or ""), Path(args.out),
+                              batch=args.batch,
+                              log=lambda msg: print(msg, file=sys.stderr))
+        print(json.dumps({"backend": name, "unique": len(texts), "kept": stats["kept"],
+                          "dropped": stats["dropped"], "out": args.out}, ensure_ascii=False))
+        return 0
+
+    mapping: dict[str, str] = {}
+    with Path(args.tm).open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            source = row.get("original") or row.get("text")
+            target = row.get("translation") or row.get("target")
+            if source and target and source != target:
+                mapping[source] = target
+    if not mapping:
+        raise ConfigError("译文表里没有可用的 original/translation 对")
+    stats = era.apply_translations(game_dir, mapping, dry_run=args.dry_run)
+    print(json.dumps({
+        "files": stats["files"], "spans": stats["spans"], "missing": stats["missing"],
+        "dry_run": bool(args.dry_run),
+    }, ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gt", description="generic game translation runtime")
     parser.add_argument("--version", action="version", version=f"gt {__version__}")
@@ -326,6 +383,25 @@ def build_parser() -> argparse.ArgumentParser:
     game_remove = game_sub.add_parser("remove", help="delete a profile and its translation memory")
     game_remove.add_argument("id")
     game_remove.set_defaults(func=cmd_game)
+
+    era = sub.add_parser("era", help="work on an Emuera game's scripts directly")
+    era_sub = era.add_subparsers(dest="action", required=True)
+    era_extract = era_sub.add_parser("extract", help="collect translatable lines into JSONL")
+    era_extract.add_argument("--game", required=True)
+    era_extract.add_argument("--out", required=True)
+    era_extract.set_defaults(func=cmd_era)
+    era_translate = era_sub.add_parser("translate", help="translate the extracted lines with a backend")
+    era_translate.add_argument("--game", required=True)
+    era_translate.add_argument("--out", required=True)
+    era_translate.add_argument("--backend", help="name from backends.json (default: the active one)")
+    era_translate.add_argument("--limit", type=int, help="stop after N unique lines")
+    era_translate.add_argument("--batch", type=int, default=8)
+    era_translate.set_defaults(func=cmd_era)
+    era_apply = era_sub.add_parser("apply", help="write a translated JSONL back into the scripts")
+    era_apply.add_argument("--game", required=True)
+    era_apply.add_argument("--tm", required=True)
+    era_apply.add_argument("--dry-run", action="store_true")
+    era_apply.set_defaults(func=cmd_era)
 
     return parser
 
