@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['D:/liteLLM/game-translator/gt/assets/gt.ico'],
+    icon=['D:/GameTranslator/gt/assets/gt.ico'],
 )
